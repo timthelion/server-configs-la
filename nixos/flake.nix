@@ -14,12 +14,39 @@
         ({modulesPath, ... }: {
           imports = [
             (modulesPath + "/installer/scan/not-detected.nix")
-            (modulesPath + "/profiles/qemu-guest.nix")
             disko.nixosModules.disko
           ];
           disko.devices = import ./disko.nix {
             lib = nixpkgs.lib;
           };
+
+          boot.initrd.availableKernelModules = [
+            "xhci_pci"
+            "ahci"
+            # SATA ssds
+            "sd_mod"
+            # NVME
+            "nvme"
+            # FIXME: HDD only servers?
+          ];
+
+
+          boot.kernelModules = [ "kvm-amd" ];
+          hardware.cpu.amd.updateMicrocode = nixpkgs.lib.mkDefault nixpkgs.config.hardware.enableRedistributableFirmware;
+
+          networking.useNetworkd = true;
+          networking.useDHCP = false;
+          # Hetzner servers commonly only have one interface, so its either to just match by that.
+          networking.usePredictableInterfaceNames = false;
+
+          systemd.network.networks."10-uplink" = {
+            matchConfig.Name = "eth0";
+            networkConfig.DHCP = "ipv4";
+            # hetzner requires static ipv6 addresses
+            networkConfig.Gateway = "fe80::1";
+            networkConfig.IPv6AcceptRA = "no";
+          };
+
           boot.loader.grub = {
             devices = [ "/dev/nvme0n1" ];
             efiSupport = true;
