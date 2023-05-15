@@ -32,7 +32,6 @@
 
 
           boot.kernelModules = [ "kvm-amd" ];
-          hardware.cpu.amd.updateMicrocode = nixpkgs.lib.mkDefault nixpkgs.config.hardware.enableRedistributableFirmware;
 
           networking.useNetworkd = true;
           networking.useDHCP = false;
